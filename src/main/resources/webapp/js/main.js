@@ -45,7 +45,7 @@ require([
         document.body.appendChild(renderer.domElement);
 
         camera = new THREE.PerspectiveCamera(45, WIDTH / HEIGHT, 0.1, 20000);
-        camera.position.set(1.7, 2.2, 2.05);
+        camera.position.set(20, 20, 10);
         scene.add(camera);
 
         window.addEventListener('resize', function() {
@@ -58,25 +58,28 @@ require([
 
         renderer.setClearColor(0xEEEEEE, 1);
 
-        var light1 = new THREE.PointLight(0xffffff);
-        light1.position.set(-100, 200, 100);
+        var light1 = new THREE.PointLight(0x888888);
+        light1.position.set(-100, 100, 100);
         scene.add(light1);
 
-        var light2 = new THREE.PointLight(0xffffff);
-        light2.position.set(100, -200, -100);
+        var light2 = new THREE.PointLight(0x888888);
+        light2.position.set(100, 100, -100);
         scene.add(light2);
 
+        var light3 = new THREE.PointLight(0x888888);
+        light3.position.set(-100, 100, -100);
+        scene.add(light3);
+
+        var light4 = new THREE.PointLight(0x888888);
+        light4.position.set(100, 100, 100);
+        scene.add(light4);
+
         // todo
-        var cube = new THREE.Mesh(
-            new THREE.CubeGeometry(1.0, 1.0, 1.0),
-            new THREE.MeshPhongMaterial({color: 0x33EE33})
-        );
-        scene.add(cube);
+        var building = new Logic.Building(10, 16, 10);
+        scene.add(building.getMesh());
         // todo
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.userPanSpeed = 0.05;
-        controls.autoRotate = true;
 
         animationController = new Logic.AnimationController(new THREE.Clock(), scene);
     }
