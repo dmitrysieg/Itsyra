@@ -2,9 +2,121 @@ define([
     'lib/three.min'
 ], function(THREE) {
 
+    /**
+     * System organization:
+     * * Building - container with elements.
+     * * Elements - set of elements with mutual constraints.
+     * * Constraint - rule of dependency for an element from one/multiple other elements.
+     */
+
+    /**
+     * Should return CW directed to the linked element ordered points.
+     */
+    var ConnectingShapeConstraint = function(shapePoints) {
+        this.shapePoints = shapePoints;
+    };
+
+    var RectBasementElement = function(lengthX, lengthZ, height, material) {
+        this.lengthX = lengthX;
+        this.lengthZ = lengthZ;
+        this.height = height;
+        this.material = material;
+        this.constraints = [
+            new ConnectingShapeConstraint([
+                new THREE.Vector3(-0.5 * lengthX, 0, -0.5 * lengthZ),
+                new THREE.Vector3(-0.5 * lengthX, 0,  0.5 * lengthZ),
+                new THREE.Vector3( 0.5 * lengthX, 0,  0.5 * lengthZ),
+                new THREE.Vector3( 0.5 * lengthX, 0, -0.5 * lengthZ)
+            ])
+        ];
+    };
+
+    RectBasementElement.prototype = {
+        createMesh: function() {
+            this.geometry = new THREE.CubeGeometry(this.lengthX, this.height, this.lengthZ);
+            this.mesh = new THREE.Mesh(this.geometry, this.material);
+
+            this.mesh.position.setY(-0.5 * height);
+            return this.mesh;
+        },
+        getConstraints: function() {
+            return this.constraints;
+        }
+    };
+
+    var RectPerimeterWallElement = function(height) {
+        this.height = height;
+        this.constraints
+    };
+
+    RectPerimeterWallElement.prototype = {
+        createMesh: function() {
+            this.mesh = new THREE.Group();
+
+            this.wall_1 = {geometry: new THREE.CubeGeometry(sizeX, sizeY, wallWidth), material: this.wallMaterial};
+            this.wall_1.mesh = new THREE.Mesh(this.wall_1.geometry, this.wall_1.material);
+            this.wall_1.mesh.position.setZ(-0.5 * sizeZ + 0.5 * wallWidth);
+            this.wall_1.mesh.position.setY(0.5 * sizeY);
+            this.mesh.add(this.wall_1.mesh);
+
+            this.wall_2 = {geometry: new THREE.CubeGeometry(sizeX, sizeY, wallWidth), material: this.wallMaterial};
+            this.wall_2.mesh = new THREE.Mesh(this.wall_2.geometry, this.wall_2.material);
+            this.wall_2.mesh.position.setZ(0.5 * sizeZ - 0.5 * wallWidth);
+            this.wall_2.mesh.position.setY(0.5 * sizeY);
+            this.mesh.add(this.wall_2.mesh);
+
+            this.wall_3 = {geometry: new THREE.CubeGeometry(wallWidth, sizeY, sizeZ - 2.0 * wallWidth), material: this.wallMaterial};
+            this.wall_3.mesh = new THREE.Mesh(this.wall_3.geometry, this.wall_3.material);
+            this.wall_3.mesh.position.setX(-0.5 * sizeX + 0.5 * wallWidth);
+            this.wall_3.mesh.position.setY(0.5 * sizeY);
+            this.mesh.add(this.wall_3.mesh);
+
+            this.wall_4 = {geometry: new THREE.CubeGeometry(wallWidth, sizeY, sizeZ - 2.0 * wallWidth), material: this.wallMaterial};
+            this.wall_4.mesh = new THREE.Mesh(this.wall_4.geometry, this.wall_4.material);
+            this.wall_4.mesh.position.setX(0.5 * sizeX - 0.5 * wallWidth);
+            this.wall_4.mesh.position.setY(0.5 * sizeY);
+            this.mesh.add(this.wall_4.mesh);
+
+            return this.mesh;
+        },
+        acceptConstraints: function(constraints) {
+            for (var i = 0; i < constraints.length; i++) {
+                if (constraints[i] typeof )
+            }
+        }
+    };
+
+    var Building2 = function() {
+
+        var cementMaterial = new THREE.MeshPhongMaterial({color: 0x777777});
+
+        var wallTexture = new THREE.TextureLoader().load('images/brick.jpg');
+        wallTexture.wrapS = THREE.RepeatWrapping;
+        wallTexture.wrapT = THREE.RepeatWrapping;
+        wallTexture.repeat.set(4, 4);
+        var wallMaterial = new THREE.MeshBasicMaterial({map: wallTexture});
+
+        this.graph = {
+            elements: {
+                "basement": new RectBasementElement(10, 16, 5, cementMaterial),
+                "wall":
+            },
+            links: [
+                {from: "basement", to: "wall"},
+                {from: "wall", to: "roof"}
+            ]
+        };
+    };
+
+    Building2.prototype = {
+        build: function() {
+            this.group = new THREE.Group();
+            this.group.add(this.basement.mesh);
+        }
+    };
+
     var Building = function(sizeX, sizeZ, sizeY){
 
-        var basementHeight = 5.0;
         var floorHeight = 0.5;
 
         var groundLevel = 0.0;
@@ -13,13 +125,9 @@ define([
 
         var roofHeight = 0.25 * sizeY;
 
-        this.cementMaterial = new THREE.MeshPhongMaterial({color: 0x777777});
 
-        var wallTexture = new THREE.TextureLoader().load('images/brick.jpg');
-        wallTexture.wrapS = THREE.RepeatWrapping;
-        wallTexture.wrapT = THREE.RepeatWrapping;
-        wallTexture.repeat.set(4, 4);
-        this.wallMaterial = new THREE.MeshBasicMaterial({map: wallTexture});
+
+
 
         var roofTexture = new THREE.TextureLoader().load('images/roof.jpg');
         roofTexture.wrapS = THREE.RepeatWrapping;
@@ -33,15 +141,6 @@ define([
         groundTexture.repeat.set(4, 4);
         this.groundMaterial = new THREE.MeshBasicMaterial({map: groundTexture, side: THREE.DoubleSide});
 
-        this.group = new THREE.Group();
-
-        // Mandatory element - basement
-        this.basement = {geometry: new THREE.CubeGeometry(sizeX, basementHeight, sizeZ), material: this.cementMaterial};
-        this.basement.mesh = new THREE.Mesh(this.basement.geometry, this.basement.material);
-
-        this.basement.mesh.position.setY(groundLevel - 0.5 * basementHeight);
-        this.group.add(this.basement.mesh);
-
         // Mandatory element - floor
         this.floor = {geometry: new THREE.CubeGeometry(sizeX, floorHeight, sizeZ), material: this.wallMaterial};
         this.floor.mesh = new THREE.Mesh(this.floor.geometry, this.floor.material);
@@ -50,29 +149,7 @@ define([
         this.group.add(this.floor.mesh);
 
         // Mandatory elements - walls (supporting only rectangle now)
-        this.wall_1 = {geometry: new THREE.CubeGeometry(sizeX, sizeY, wallWidth), material: this.wallMaterial};
-        this.wall_1.mesh = new THREE.Mesh(this.wall_1.geometry, this.wall_1.material);
-        this.wall_1.mesh.position.setZ(-0.5 * sizeZ + 0.5 * wallWidth);
-        this.wall_1.mesh.position.setY(0.5 * sizeY);
-        this.group.add(this.wall_1.mesh);
 
-        this.wall_2 = {geometry: new THREE.CubeGeometry(sizeX, sizeY, wallWidth), material: this.wallMaterial};
-        this.wall_2.mesh = new THREE.Mesh(this.wall_2.geometry, this.wall_2.material);
-        this.wall_2.mesh.position.setZ(0.5 * sizeZ - 0.5 * wallWidth);
-        this.wall_2.mesh.position.setY(0.5 * sizeY);
-        this.group.add(this.wall_2.mesh);
-
-        this.wall_3 = {geometry: new THREE.CubeGeometry(wallWidth, sizeY, sizeZ - 2.0 * wallWidth), material: this.wallMaterial};
-        this.wall_3.mesh = new THREE.Mesh(this.wall_3.geometry, this.wall_3.material);
-        this.wall_3.mesh.position.setX(-0.5 * sizeX + 0.5 * wallWidth);
-        this.wall_3.mesh.position.setY(0.5 * sizeY);
-        this.group.add(this.wall_3.mesh);
-
-        this.wall_4 = {geometry: new THREE.CubeGeometry(wallWidth, sizeY, sizeZ - 2.0 * wallWidth), material: this.wallMaterial};
-        this.wall_4.mesh = new THREE.Mesh(this.wall_4.geometry, this.wall_4.material);
-        this.wall_4.mesh.position.setX(0.5 * sizeX - 0.5 * wallWidth);
-        this.wall_4.mesh.position.setY(0.5 * sizeY);
-        this.group.add(this.wall_4.mesh);
 
         // Mandatory element - roof (triangle prism now only)
         this.roof = {
