@@ -101,16 +101,20 @@ define([
                 "basement": new RectBasementElement(10, 16, 5, cementMaterial),
                 "wall":
             },
-            links: [
-                {from: "basement", to: "wall"},
-                {from: "wall", to: "roof"}
-            ]
+            root: "basement",
+            links: {
+                "basement": ["wall"],
+                "wall": ["roof"]
+            }
         };
     };
 
     Building2.prototype = {
         build: function() {
             this.group = new THREE.Group();
+
+            
+
             this.group.add(this.basement.mesh);
         }
     };
