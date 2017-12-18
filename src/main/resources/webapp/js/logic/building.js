@@ -87,6 +87,15 @@ define([
         }
     };
 
+    var ShapeHelper = function() {
+    };
+
+    ShapeHelper.prototype = {
+        outline: function(shape, thickness) {
+            console.log(shape);
+        }
+    };
+
     var Building2 = function() {
 
         this.materials = {};
@@ -200,12 +209,22 @@ define([
         },
         createElement: function(el) {
 
-            var shape = {};
+            var shape = new THREE.Shape();
 
             if (el.shape.operation == "new") {
 
+                if (el.shape.shape == "rect") {
+                    shape.moveTo(0, 0);
+                    shape.lineTo(0, length-z);
+                    shape.lineTo(length-x, length-z);
+                    shape.lineTo(length-x, 0);
+                    shape.lineTo(0, 0);
+                } else {
+                    throw "Unsupported shape: " + el.shape.shape;
+                }
             } else if (el.shape.operation == "outline") {
 
+                shape = ShapeHelper.outline(shape, el.shape.outline-width);
             } else if (el.shape.operation == "inner-outline-shape") {
 
             } else if (el.shape.operation == "outer-outline-shape") {
