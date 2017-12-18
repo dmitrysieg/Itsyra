@@ -1,6 +1,7 @@
 define([
-    'lib/three.min'
-], function(THREE) {
+    'lib/three.min',
+    'logic/bfs'
+], function(THREE, BFS) {
 
     /**
      * System organization:
@@ -114,47 +115,52 @@ define([
 
         this.graph = {
             elements: {
-                "basement-shape": {
-                    "base": "self",
-                    "shape": "rect",
-                    "length-x": "16.0",
-                    "length-z": "10.0"
-                },
                 "basement": {
-                    "base": "basement-shape",
-                    "operation": "extrude",
-                    "height": "5.0",
-                    "material": "cement"
-                },
-                "wall-shape": {
-                    "base": "basement",
-                    "operation": "outline",
-                    "outline-width": "0.5"
+                    "base": null,
+                    "shape": {
+                        "operation": "new",
+                        "shape": "rect",
+                        "length-x": "16.0",
+                        "length-z": "10.0"
+                    },
+                    "mesh": {
+                        "operation": "extrude",
+                        "height": "5.0",
+                        "material": "cement"
+                    }
                 },
                 "wall": {
-                    "base": "wall-shape",
-                    "operation": "extrude",
-                    "height": "10.0",
-                    "material": "brick"
-                },
-                "floor-shape": {
-                    "base": "wall-shape",
-                    "operation": "inner-outline-shape"
+                    "base": "basement",
+                    "shape": {
+                        "operation": "outline",
+                        "outline-width": "0.5"
+                    },
+                    "mesh": {
+                        "operation": "extrude",
+                        "height": "10.0",
+                        "material": "brick"
+                    }
                 },
                 "floor": {
-                    "base": "floor-shape",
-                    "operation": "extrude",
-                    "height": "0.5",
-                    "material": "floor"
-                },
-                "roof-shape": {
-                    "base": "wall-shape",
-                    "operation": "outer-outline-shape"
+                    "base": "wall",
+                    "shape": {
+                        "operation": "inner-outline-shape"
+                    },
+                    "mesh": {
+                        "operation": "extrude",
+                        "height": "0.5",
+                        "material": "floor"
+                    }
                 },
                 "roof": {
-                    "base": "roof-shape",
-                    "operation": "center-prism",
-                    "height": "= 0.25 * wall.height"
+                    "base": "wall",
+                    "shape": {
+                        "operation": "outer-outline-shape"
+                    },
+                    "mesh": {
+                        "operation": "center-prism",
+                        "height": "= 0.25 * wall.height"
+                    }
                 }
             },
             root: "basement-shape"
@@ -163,14 +169,58 @@ define([
 
     Building2.prototype = {
         createStraightGraph: function() {
-            // todo
+            for (var key in this.elements) {
+                var base = this.graph.elements[key].base;
+                if (!base && key != this.graph.root) {
+                    throw "Non-root element " + key + " doesn't have a base element";
+                }
+                if (!base.next) {
+                    base.next = [];
+                }
+                base.next.push(key);
+            }
+        },
+        getNext: function(el) {
+            return el.next;
         },
         build: function() {
+
+            this.createStraightGraph();
+
             this.group = new THREE.Group();
 
-            
+            new BFS(
+                this.graph.elements,
+                this.getNext,
+                this.createElement,
+                this // todo leave only "this"
+            ).run();
 
             this.group.add(this.basement.mesh);
+        },
+        createElement: function(el) {
+
+            var shape = {};
+
+            if (el.shape.operation == "new") {
+
+            } else if (el.shape.operation == "outline") {
+
+            } else if (el.shape.operation == "inner-outline-shape") {
+
+            } else if (el.shape.operation == "outer-outline-shape") {
+
+            }
+
+            var mesh = {};
+
+            if (el.mesh.operation == "extrude") {
+
+            } else if (el.mesh.operation == "center-prism") {
+
+            }
+
+            // add mesh to the group
         }
     };
 
