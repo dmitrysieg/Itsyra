@@ -88,28 +88,83 @@ define([
 
     var Building2 = function() {
 
-        var cementMaterial = new THREE.MeshPhongMaterial({color: 0x777777});
+        this.materials = {};
+
+        this.materials["cement"] = new THREE.MeshPhongMaterial({color: 0x777777});
 
         var wallTexture = new THREE.TextureLoader().load('images/brick.jpg');
         wallTexture.wrapS = THREE.RepeatWrapping;
         wallTexture.wrapT = THREE.RepeatWrapping;
         wallTexture.repeat.set(4, 4);
-        var wallMaterial = new THREE.MeshBasicMaterial({map: wallTexture});
+        this.materials["brick"] = new THREE.MeshBasicMaterial({map: wallTexture});
+
+        this.materials["floor"] = this.materials["brick"];
+
+        var roofTexture = new THREE.TextureLoader().load('images/roof.jpg');
+        roofTexture.wrapS = THREE.RepeatWrapping;
+        roofTexture.wrapT = THREE.RepeatWrapping;
+        roofTexture.repeat.set(4, 4);
+        this.materials["roof"] = new THREE.MeshBasicMaterial({map: roofTexture, side: THREE.DoubleSide});
+
+        var groundTexture = new THREE.TextureLoader().load('images/cobblestone.jpg');
+        groundTexture.wrapS = THREE.RepeatWrapping;
+        groundTexture.wrapT = THREE.RepeatWrapping;
+        groundTexture.repeat.set(4, 4);
+        this.materials["cobblestone"] = new THREE.MeshBasicMaterial({map: groundTexture, side: THREE.DoubleSide});
 
         this.graph = {
             elements: {
-                "basement": new RectBasementElement(10, 16, 5, cementMaterial),
-                "wall":
+                "basement-shape": {
+                    "base": "self",
+                    "shape": "rect",
+                    "length-x": "16.0",
+                    "length-z": "10.0"
+                },
+                "basement": {
+                    "base": "basement-shape",
+                    "operation": "extrude",
+                    "height": "5.0",
+                    "material": "cement"
+                },
+                "wall-shape": {
+                    "base": "basement",
+                    "operation": "outline",
+                    "outline-width": "0.5"
+                },
+                "wall": {
+                    "base": "wall-shape",
+                    "operation": "extrude",
+                    "height": "10.0",
+                    "material": "brick"
+                },
+                "floor-shape": {
+                    "base": "wall-shape",
+                    "operation": "inner-outline-shape"
+                },
+                "floor": {
+                    "base": "floor-shape",
+                    "operation": "extrude",
+                    "height": "0.5",
+                    "material": "floor"
+                },
+                "roof-shape": {
+                    "base": "wall-shape",
+                    "operation": "outer-outline-shape"
+                },
+                "roof": {
+                    "base": "roof-shape",
+                    "operation": "center-prism",
+                    "height": "= 0.25 * wall.height"
+                }
             },
-            root: "basement",
-            links: {
-                "basement": ["wall"],
-                "wall": ["roof"]
-            }
+            root: "basement-shape"
         };
     };
 
     Building2.prototype = {
+        createStraightGraph: function() {
+            // todo
+        },
         build: function() {
             this.group = new THREE.Group();
 
@@ -133,17 +188,7 @@ define([
 
 
 
-        var roofTexture = new THREE.TextureLoader().load('images/roof.jpg');
-        roofTexture.wrapS = THREE.RepeatWrapping;
-        roofTexture.wrapT = THREE.RepeatWrapping;
-        roofTexture.repeat.set(4, 4);
-        this.roofMaterial = new THREE.MeshBasicMaterial({map: roofTexture, side: THREE.DoubleSide});
 
-        var groundTexture = new THREE.TextureLoader().load('images/cobblestone.jpg');
-        groundTexture.wrapS = THREE.RepeatWrapping;
-        groundTexture.wrapT = THREE.RepeatWrapping;
-        groundTexture.repeat.set(4, 4);
-        this.groundMaterial = new THREE.MeshBasicMaterial({map: groundTexture, side: THREE.DoubleSide});
 
         // Mandatory element - floor
         this.floor = {geometry: new THREE.CubeGeometry(sizeX, floorHeight, sizeZ), material: this.wallMaterial};
