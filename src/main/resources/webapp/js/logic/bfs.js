@@ -11,18 +11,23 @@ define([
 
     BFS.prototype = {
         run: function() {
-            var stack = this.getNext(this.graph.root);
+
+            var elements = this.graph.elements;
+            var stack = [this.graph.root];
+
             while (stack.length > 0) {
+
                 var frontStack = [];
                 while (stack.length > 0) {
                     var el = stack.pop();
-                    var nextEls = this.getNext(el);
-                    for (var nextEl in nextEls) {
-                        if (!nextEl.passed) {
-                            this.action.call(this.scope, nextEl);
-                            frontStack.push(nextEl);
-                        }
+                    if (elements[el].passed) {
+                        continue;
                     }
+                    this.action.call(this.scope, el);
+                    elements[el].passed = true;
+
+                    var nextEls = this.getNext.call(this.scope, el);
+                    Array.prototype.push.apply(frontStack, nextEls);
                 }
                 stack = frontStack;
             }

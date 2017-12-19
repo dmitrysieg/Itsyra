@@ -79,22 +79,23 @@ define([
             this.mesh.add(this.wall_4.mesh);
 
             return this.mesh;
-        },
+        }/*,
         acceptConstraints: function(constraints) {
             for (var i = 0; i < constraints.length; i++) {
                 if (constraints[i] typeof )
             }
-        }
+        }*/
     };
 
     var ShapeHelper = function() {
     };
 
     ShapeHelper.prototype = {
-        outline: function(shape, thickness) {
+        createOutline: function(shape, thickness) {
             console.log(shape);
         }
     };
+    var shapeHelper = new ShapeHelper();
 
     var Building2 = function() {
 
@@ -128,7 +129,7 @@ define([
                     "base": null,
                     "shape": {
                         "operation": "new",
-                        "shape": "rect",
+                        "type": "rect",
                         "length-x": "16.0",
                         "length-z": "10.0"
                     },
@@ -168,29 +169,44 @@ define([
                     },
                     "mesh": {
                         "operation": "center-prism",
-                        "height": "= 0.25 * wall.height"
+                        "height": "= 0.25 * wall.height",
+                        "material": "roof"
                     }
                 }
             },
-            root: "basement-shape"
+            root: "basement"
         };
     };
 
     Building2.prototype = {
         createStraightGraph: function() {
-            for (var key in this.elements) {
-                var base = this.graph.elements[key].base;
-                if (!base && key != this.graph.root) {
-                    throw "Non-root element " + key + " doesn't have a base element";
+            var elements = this.graph.elements;
+            for (var key in elements) {
+                var base = elements[key].base;
+                if (!base) {
+                    if (key != this.graph.root) {
+                        throw "Non-root element " + key + " doesn't have a base element";
+                    } else {
+                        continue;
+                    }
                 }
-                if (!base.next) {
-                    base.next = [];
+                if (!elements[base].next) {
+                    elements[base].next = [];
                 }
-                base.next.push(key);
+                elements[base].next.push(key);
             }
         },
-        getNext: function(el) {
-            return el.next;
+        getMesh: function() {
+            if (!this.mesh) {
+                this.build();
+            }
+        },
+        getNext: function(name) {
+            var next = this.graph.elements[name].next;
+            if (!next) {
+                next = [];
+            }
+            return next;
         },
         build: function() {
 
@@ -199,47 +215,76 @@ define([
             this.group = new THREE.Group();
 
             new BFS(
-                this.graph.elements,
+                this.graph,
                 this.getNext,
                 this.createElement,
                 this // todo leave only "this"
             ).run();
-
-            this.group.add(this.basement.mesh);
         },
-        createElement: function(el) {
+        createElement: function(name) {
 
+            var el = this.graph.elements[name];
+            var parentEl = this.graph.elements[el.base];
             var shape = new THREE.Shape();
 
             if (el.shape.operation == "new") {
 
-                if (el.shape.shape == "rect") {
+                if (el.shape.type == "rect") {
+
+                    var lengthX = Number.parseFloat(el.shape["length-x"]);
+                    var lengthZ = Number.parseFloat(el.shape["length-z"]);
+
                     shape.moveTo(0, 0);
-                    shape.lineTo(0, length-z);
-                    shape.lineTo(length-x, length-z);
-                    shape.lineTo(length-x, 0);
+                    shape.lineTo(0, lengthZ);
+                    shape.lineTo(lengthX, lengthZ);
+                    shape.lineTo(lengthX, 0);
                     shape.lineTo(0, 0);
+
                 } else {
                     throw "Unsupported shape: " + el.shape.shape;
                 }
             } else if (el.shape.operation == "outline") {
 
-                shape = ShapeHelper.outline(shape, el.shape.outline-width);
+                var outlineWidth = Number.parseFloat(el.shape["outline-width"]);
+                // todo switch from inner/outer to initial/resulted
+                el.shape.outerOutline = parentEl.shape.shape;
+
+                shape = shapeHelper.createOutline(parentEl.shape.shape, outlineWidth);
+
+                el.shape.innerOutline = shape;
+
             } else if (el.shape.operation == "inner-outline-shape") {
+
+                shape = parentEl.shape.innerOutline;
 
             } else if (el.shape.operation == "outer-outline-shape") {
 
-            }
+                shape = parentEl.shape.outerOutline;
 
-            var mesh = {};
+            } else {
+                throw "Shape operation \"" + el.shape.operation + "\" is unsupported";
+            }
+            el.shape.shape = shape;
+
+            var mesh = null;
 
             if (el.mesh.operation == "extrude") {
 
+                var height = Number.parseFloat(el.mesh.height);
+
+                var geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height});
+                var material = new THREE.MeshBasicMaterial(this.materials[el.mesh.material]);
+                mesh = new THREE.Mesh(geometry, material) ;
+
             } else if (el.mesh.operation == "center-prism") {
 
+            } else {
+                throw "Mesh operation \"" + el.mesh.operation + "\" is unsupported";
             }
+            el.mesh.mesh = mesh;
 
             // add mesh to the group
+            this.group.add(mesh);
         }
     };
 
@@ -348,5 +393,5 @@ define([
         }
     };
 
-    return Building;
+    return Building2;
 });
