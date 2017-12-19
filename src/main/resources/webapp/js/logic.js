@@ -1,12 +1,15 @@
 define([
     'logic/animationcontroller',
-    'logic/building'
+    'logic/building',
+    'logic/uicontrols'
 ], function(
     AnimationController,
-    Building
+    Building,
+    UIControls
 ) {
     return {
         AnimationController: AnimationController,
-        Building: Building
+        Building: Building,
+        UIControls: UIControls
     };
 });

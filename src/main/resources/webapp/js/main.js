@@ -80,6 +80,8 @@ require([
         // todo
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
+        var uiControls = new Logic.UIControls();
+        document.body.appendChild(uiControls.getBody());
 
         animationController = new Logic.AnimationController(new THREE.Clock(), scene);
     }
