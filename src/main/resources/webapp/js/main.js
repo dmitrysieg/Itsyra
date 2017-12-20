@@ -75,6 +75,9 @@ require([
         light4.position.set(100, 100, 100);
         scene.add(light4);
 
+        var arrows = new Logic.Arrows(10.0);
+        scene.add(arrows.getMesh());
+
         var uiControls = new Logic.UIControls();
         document.body.appendChild(uiControls.getBody());
 

@@ -224,6 +224,11 @@ define([
             },
             root: "basement"
         };
+
+        this.qY = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(0, 0, 1),
+            new THREE.Vector3(0, 1, 0)
+        );
     };
 
     Building2.prototype = {
@@ -333,7 +338,7 @@ define([
 
                 var height = Number.parseFloat(el.mesh.height);
 
-                var geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height});
+                var geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height, bevelEnabled: false});
                 var material = new THREE.MeshBasicMaterial(this.materials[el.mesh.material]);
                 mesh = new THREE.Mesh(geometry, material) ;
 
@@ -346,6 +351,7 @@ define([
 
             // add mesh to the group
             if (mesh) {
+                mesh.applyQuaternion(this.qY);
                 this.group.add(mesh);
             }
         }
