@@ -21,6 +21,7 @@ div#div-info {
     top: 40px;
     /* todo: cope with the labels displaying nightmare. */
     width: 250px;
+    height: 250px;
 }
 
 label {

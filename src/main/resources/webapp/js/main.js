@@ -3,20 +3,15 @@
  */
 
 requirejs.config({
-    baseUrl: 'js',
-    shim: {
-        'sigma.min': {
-            exports: 'sigma'
-        }
-    }
+    baseUrl: 'js'
 });
 
 require([
     'lib/three.min',
     'lib/OrbitControls',
     'logic',
-    'lib/sigma.min'
-], function(THREE, OrbitControls, Logic, Sigma) {
+    'lib/vis.min'
+], function(THREE, OrbitControls, Logic, VIS) {
 
     var scene, camera, renderer;
 
@@ -80,32 +75,23 @@ require([
         light4.position.set(100, 100, 100);
         scene.add(light4);
 
+        var uiControls = new Logic.UIControls();
+        document.body.appendChild(uiControls.getBody());
+
+        uiControls.nodes = new VIS.DataSet();
+        uiControls.edges = new VIS.DataSet();
+        uiControls.network = new VIS.Network(uiControls.getBody(), {
+            nodes: uiControls.nodes,
+            edges: uiControls.edges
+        }, {});
+
         // todo
         var building = new Logic.Building(10, 16, 10);
+        building.uiControls = uiControls;
         scene.add(building.getMesh());
         // todo
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        var uiControls = new Logic.UIControls();
-        document.body.appendChild(uiControls.getBody());
-
-        var SigmaGraph = new sigma({container: 'div-info'});
-        SigmaGraph.graph.read({
-          nodes: [
-            { id: 'n0', label: 'Node0' },
-            { id: 'n1', label: 'Node1' }
-          ],
-          edges: [
-            {
-              id: 'e0',
-              source: 'n0',
-              target: 'n1',
-              size: Math.random(),
-            color: '#ccc'
-            }
-          ]
-        });
-        SigmaGraph.refresh();
 
         animationController = new Logic.AnimationController(new THREE.Clock(), scene);
     }

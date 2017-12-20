@@ -242,6 +242,7 @@ define([
                     elements[base].next = [];
                 }
                 elements[base].next.push(key);
+                this.updateEdge(base, key);
             }
         },
         getMesh: function() {
@@ -257,8 +258,18 @@ define([
             }
             return next;
         },
+        updateNodes: function() {
+            var elements = this.graph.elements;
+            for (var key in elements) {
+                this.uiControls.nodes.add({id: key, label: key});
+            }
+        },
+        updateEdge: function(from, to) {
+            this.uiControls.edges.add({from: from, to: to, arrows: 'to'});
+        },
         build: function() {
 
+            this.updateNodes();
             this.createStraightGraph();
 
             this.group = new THREE.Group();
