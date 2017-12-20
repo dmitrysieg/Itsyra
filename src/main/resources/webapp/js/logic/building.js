@@ -155,7 +155,7 @@ define([
         wallTexture.wrapS = THREE.RepeatWrapping;
         wallTexture.wrapT = THREE.RepeatWrapping;
         wallTexture.repeat.set(4, 4);
-        this.materials["brick"] = new THREE.MeshBasicMaterial({map: wallTexture});
+        this.materials["brick"] = new THREE.MeshBasicMaterial({map: wallTexture, wireframe: true});
 
         this.materials["floor"] = this.materials["brick"];
 
@@ -315,9 +315,10 @@ define([
                 // todo switch from inner/outer to initial/resulted
                 el.shape.outerOutline = parentEl.shape.shape;
 
-                shape = shapeHelper.createOutline(parentEl.shape.shape, outlineWidth);
+                el.shape.innerOutline = shapeHelper.createOutline(parentEl.shape.shape, outlineWidth);;
 
-                el.shape.innerOutline = shape;
+                shape = parentEl.shape.shape.clone();
+                shape.holes = [el.shape.innerOutline];
 
             } else if (el.shape.operation == "inner-outline-shape") {
 
@@ -352,6 +353,12 @@ define([
             // add mesh to the group
             if (mesh) {
                 mesh.applyQuaternion(this.qY);
+                if (parentEl && parentEl.mesh.height) {
+                    mesh.position.copy(parentEl.mesh.mesh.position);
+                    // translateY gives a bug of translating by another axis
+                    mesh.position.setY(mesh.position.y + Number.parseFloat(parentEl.mesh.height));
+                }
+
                 this.group.add(mesh);
             }
         }
