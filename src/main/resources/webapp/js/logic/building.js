@@ -100,7 +100,7 @@ define([
         wallTexture.wrapS = THREE.RepeatWrapping;
         wallTexture.wrapT = THREE.RepeatWrapping;
         wallTexture.repeat.set(4, 4);
-        this.materials["brick"] = new THREE.MeshBasicMaterial({map: wallTexture, wireframe: true});
+        this.materials["brick"] = new THREE.MeshBasicMaterial({map: wallTexture/*, wireframe: true*/});
 
         this.materials["floor"] = this.materials["brick"];
 
@@ -280,6 +280,7 @@ define([
                 var height = Number.parseFloat(el.mesh.height);
 
                 var geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height, bevelEnabled: false});
+                //var geometry = shapeHelper.extrudeShape(shape, height);
                 var material = new THREE.MeshBasicMaterial(this.materials[el.mesh.material]);
                 mesh = new THREE.Mesh(geometry, material) ;
 
@@ -297,6 +298,10 @@ define([
                     mesh.position.copy(parentEl.mesh.mesh.position);
                     // translateY gives a bug of translating by another axis
                     mesh.position.setY(mesh.position.y + Number.parseFloat(parentEl.mesh.height));
+                }
+
+                if (name == 'floor') {
+                    return;
                 }
 
                 this.group.add(mesh);
