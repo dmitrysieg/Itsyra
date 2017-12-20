@@ -2,14 +2,38 @@ define([
     'lib/three.min'
 ], function(THREE) { // todo reduce THREE dependency
 
-    var BFS = function(graph, getNext, action, scope) {
-        this.graph = graph;
-        this.getNext = getNext;
-        this.action = action;
-        this.scope = scope;
+    /**
+     * Create new BFS algorithm worker.
+     * Contract for the target object:
+     * - target.graph should contain graph: {elements: ..., root: ...}.
+     * - target.getNext should be a function returning an array of the next elements for a given element.
+     * - target.action should be a function to be called on a single vertex bypassing. Is called with a scope of 'target'.
+     * All the properties can be redefined by calling the related fluent methods.
+     */
+    var BFS = function(target) {
+        this.graph = target.graph;
+        this.getNext = target.getNext;
+        this.action = target.action;
+        this.scope = target;
     };
 
     BFS.prototype = {
+        withAction: function(action) {
+            this.action = action;
+            return this;
+        },
+        withGetNext: function(getNext) {
+            this.getNext = getNext;
+            return this;
+        },
+        withGraph: function(graph) {
+            this.graph = graph;
+            return this;
+        },
+        withScope: function(scope) {
+            this.scope = scope;
+            return this;
+        },
         run: function() {
 
             var elements = this.graph.elements;
