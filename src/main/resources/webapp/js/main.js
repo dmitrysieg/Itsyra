@@ -88,15 +88,17 @@ require([
             edges: uiControls.edges
         }, {});
 
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        animationController = new Logic.AnimationController(new THREE.Clock(), scene);
+
         // todo
         var building = new Logic.Building(10, 16, 10);
         building.uiControls = uiControls;
-        scene.add(building.getMesh());
+
+        building.loadGraph("js/building/simple-box.json", function() {
+            scene.add(this.getMesh());
+        });
         // todo
-
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-        animationController = new Logic.AnimationController(new THREE.Clock(), scene);
     }
 
     function animate() {

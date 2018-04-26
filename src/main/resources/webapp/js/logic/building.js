@@ -1,8 +1,9 @@
 define([
     'lib/three.min',
     'logic/bfs',
-    'logic/shapehelper'
-], function(THREE, BFS, ShapeHelper) {
+    'logic/shapehelper',
+    'lib/jquery-3.3.1.min'
+], function(THREE, BFS, ShapeHelper, jQuery) {
 
     /**
      * System organization:
@@ -116,60 +117,6 @@ define([
         groundTexture.repeat.set(4, 4);
         this.materials["cobblestone"] = new THREE.MeshBasicMaterial({map: groundTexture, side: THREE.DoubleSide});
 
-        this.graph = {
-            elements: {
-                "basement": {
-                    "base": null,
-                    "shape": {
-                        "operation": "new",
-                        "type": "rect",
-                        "length-x": "16.0",
-                        "length-z": "10.0"
-                    },
-                    "mesh": {
-                        "operation": "extrude",
-                        "height": "5.0",
-                        "material": "cement"
-                    }
-                },
-                "wall": {
-                    "base": "basement",
-                    "shape": {
-                        "operation": "outline",
-                        "outline-width": "0.5"
-                    },
-                    "mesh": {
-                        "operation": "extrude",
-                        "height": "10.0",
-                        "material": "brick"
-                    }
-                },
-                "floor": {
-                    "base": "wall",
-                    "shape": {
-                        "operation": "inner-outline-shape"
-                    },
-                    "mesh": {
-                        "operation": "extrude",
-                        "height": "0.5",
-                        "material": "floor"
-                    }
-                },
-                "roof": {
-                    "base": "wall",
-                    "shape": {
-                        "operation": "outer-outline-shape"
-                    },
-                    "mesh": {
-                        "operation": "center-prism",
-                        "height": "= 0.25 * wall.height",
-                        "material": "roof"
-                    }
-                }
-            },
-            root: "basement"
-        };
-
         this.qY = new THREE.Quaternion().setFromUnitVectors(
             new THREE.Vector3(0, 0, 1),
             new THREE.Vector3(0, 1, 0)
@@ -208,6 +155,13 @@ define([
             }
             return next;
         },
+        loadGraph: function(url, callback) {
+            var that = this;
+            $.getJSON(url, function(data) {
+                that.graph = data;
+                callback.call(that, that.graph);
+            });
+        } ,
         updateNodes: function() {
             var elements = this.graph.elements;
             for (var key in elements) {

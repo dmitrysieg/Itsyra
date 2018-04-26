@@ -1,0 +1,53 @@
+{
+  "elements": {
+    "basement": {
+      "base": null,
+      "shape": {
+        "operation": "new",
+        "type": "rect",
+        "length-x": "16.0",
+        "length-z": "10.0"
+      },
+      "mesh": {
+        "operation": "extrude",
+        "height": "5.0",
+        "material": "cement"
+      }
+    },
+    "wall": {
+      "base": "basement",
+      "shape": {
+        "operation": "outline",
+        "outline-width": "0.5"
+      },
+      "mesh": {
+        "operation": "extrude",
+        "height": "10.0",
+        "material": "brick"
+      }
+    },
+    "floor": {
+      "base": "wall",
+      "shape": {
+        "operation": "inner-outline-shape"
+      },
+      "mesh": {
+        "operation": "extrude",
+        "height": "0.5",
+        "material": "floor"
+      }
+    },
+    "roof": {
+      "base": "wall",
+      "shape": {
+        "operation": "outer-outline-shape"
+      },
+      "mesh": {
+        "operation": "center-prism",
+        "height": "= 0.25 * wall.height",
+        "material": "roof"
+      }
+    }
+  },
+  "root": "basement"
+}
