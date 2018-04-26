@@ -1,6 +1,4 @@
-define([
-    'lib/three.min'
-], function(THREE) {
+define(function() {
 
     var UIControls = function() {
 

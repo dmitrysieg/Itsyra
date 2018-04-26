@@ -1,9 +1,7 @@
 /**
  * Defines interactions between objects at the scene and animation logic.
  */
-define([
-    'lib/three.min'
-], function(THREE) {
+define(function() {
 
     var AnimationController = function(clock, scene) {
         this.clock = clock;

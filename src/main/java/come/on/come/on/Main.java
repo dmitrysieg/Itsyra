@@ -13,7 +13,7 @@ public class Main {
 
         ServerConnector http = new ServerConnector(server);
         http.setHost("localhost");
-        http.setPort(8080);
+        http.setPort(8081);
         server.addConnector(http);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -21,6 +21,7 @@ public class Main {
 
         ResourceHandler resourceHandler = new ResourceHandler();
         resourceHandler.setResourceBase("src/main/resources/webapp");
+        resourceHandler.setWelcomeFiles(new String[]{"index.htm"});
 
         context.setHandler(resourceHandler);
 

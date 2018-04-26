@@ -1,6 +1,4 @@
-define([
-    'lib/three.min'
-], function(THREE) { // todo reduce THREE dependency
+define(function() {
 
     /**
      * Create new BFS algorithm worker.
