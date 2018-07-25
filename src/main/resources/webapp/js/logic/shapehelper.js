@@ -59,26 +59,69 @@ define([
         },
         /**
          * @param faces - Array of geometry.faces.
-         * @param v - Array of vertices in a clockwise order.
+         * @param v - Array of vertices indexes in a clockwise order.
          */
         drawFace4: function(faces, v) {
             faces.push(new THREE.Face3(v[0], v[1], v[2]));
             faces.push(new THREE.Face3(v[0], v[2], v[3]));
         },
+
+        /**
+         * Draw a face for 4 last vertices added.
+         * @param faces geometry.faces
+         * @param vertices geometry.vertices
+         */
+        drawFace4_last: function(faces, vertices, direction) {
+            var e = vertices.length - 4;
+            if (direction > 0) {
+                this.drawFace4(faces, [e, e + 1, e + 2, e + 3]);
+            } else {
+                this.drawFace4(faces, [e + 3, e + 2, e + 1, e]);
+            }
+        },
+
+        addTriangulatedOutlinedManhattanShape: function(geometry, points, holePoints, heightLevel, faceSign) {
+
+            var p = points, ip = holePoints;
+            var l = p.length;
+            if (l !== ip.length) {
+                throw "Hole points count is not correspondent to original shape points count!";
+            }
+
+            for (var i = 0; i < l; i++) {
+                var next_i = (i + 1) % l;
+                geometry.vertices.push(new THREE.Vector3(p[i].x, p[i].y, heightLevel));
+                geometry.vertices.push(new THREE.Vector3(p[next_i].x, p[next_i].y, heightLevel));
+                geometry.vertices.push(new THREE.Vector3(ip[next_i].x, ip[next_i].y, heightLevel));
+                geometry.vertices.push(new THREE.Vector3(ip[i].x, ip[i].y, heightLevel));
+                this.drawFace4_last(geometry.faces, geometry.vertices, faceSign);
+
+                geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(0.1, 1 - 0.1)]);
+                geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0.1, 1 - 0.1), new THREE.Vector2(0.1, 0.1)]);
+            }
+        },
+
         /**
          * Return a Geometry extruded from the given shape; counting holes if present.
+         * @param shape Can have: {points, holes {points}}.
+         * @param height Total height of a resulted mesh.
          */
         extrudeShape: function(shape, height) {
             var geometry = new THREE.Geometry();
 
             var points = shape.getPoints().slice(),
+                holePoints = shape.holes[0].getPoints(),
                 count = points.length;
 
             if (points[0].x == points[count - 1].x &&
                 points[0].y == points[count - 1].y) {
                 points.pop();
+                holePoints.pop();
                 count--;
             }
+
+            geometry.faceVertexUvs[0] = [];
+
 
             for (var i = 0; i < count; i++) {
 
@@ -93,6 +136,8 @@ define([
                         i * 2 + 1,
                         i * 2
                     ]);
+                    geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(1, 1)]);
+                    geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 1), new THREE.Vector2(1, 0)]);
                 }
             }
             this.drawFace4(geometry.faces, [
@@ -101,6 +146,14 @@ define([
                 1,
                 0
             ]);
+            geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(1, 1)]);
+            geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 1), new THREE.Vector2(1, 0)]);
+
+            this.addTriangulatedOutlinedManhattanShape(geometry, points, holePoints, 0, 1);
+            this.addTriangulatedOutlinedManhattanShape(geometry, points, holePoints, height, -1);
+
+            geometry.computeFaceNormals();
+
             return geometry;
         }
     };

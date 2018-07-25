@@ -118,7 +118,7 @@ define([
         this.materials["cobblestone"] = new THREE.MeshBasicMaterial({map: groundTexture, side: THREE.DoubleSide});
 
         this.qY = new THREE.Quaternion().setFromUnitVectors(
-            new THREE.Vector3(0, 0, 1),
+            new THREE.Vector3(0, 0, -1),
             new THREE.Vector3(0, 1, 0)
         );
     };
@@ -209,7 +209,7 @@ define([
                 // todo switch from inner/outer to initial/resulted
                 el.shape.outerOutline = parentEl.shape.shape;
 
-                el.shape.innerOutline = shapeHelper.createOutline(parentEl.shape.shape, outlineWidth);;
+                el.shape.innerOutline = shapeHelper.createOutline(parentEl.shape.shape, outlineWidth);
 
                 shape = parentEl.shape.shape.clone();
                 shape.holes = [el.shape.innerOutline];
@@ -233,8 +233,13 @@ define([
 
                 var height = Number.parseFloat(el.mesh.height);
 
-                var geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height, bevelEnabled: false});
-                //var geometry = shapeHelper.extrudeShape(shape, height);
+                var geometry;
+                if (shape.holes.length === 0) {
+                    geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height, bevelEnabled: false});;
+                } else {
+                    geometry = shapeHelper.extrudeShape(shape, height);
+                }
+
                 var material = new THREE.MeshBasicMaterial(this.materials[el.mesh.material]);
                 mesh = new THREE.Mesh(geometry, material) ;
 
@@ -249,9 +254,12 @@ define([
             if (mesh) {
                 mesh.applyQuaternion(this.qY);
                 if (parentEl && parentEl.mesh.height) {
+
                     mesh.position.copy(parentEl.mesh.mesh.position);
+
                     // translateY gives a bug of translating by another axis
-                    mesh.position.setY(mesh.position.y + Number.parseFloat(parentEl.mesh.height));
+                    mesh.geometry.computeBoundingBox();
+                    mesh.position.setY(mesh.position.y + mesh.geometry.boundingBox.getCenter().y + Number.parseFloat(parentEl.mesh.height));
                 }
 
                 if (name == 'floor') {
