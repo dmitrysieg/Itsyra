@@ -122,32 +122,69 @@ define([
 
             geometry.faceVertexUvs[0] = [];
 
-
+            /*     1----------5-------(*) + 1
+             *    /|         /|       /|
+             *  (3)-------(7)-------(*)| + 3
+             *   | |       |  |      | |
+             *   | |       |  |      | |
+             *   | |       |  |      | |                  -> outer
+             *   | 0-------|--4------|(*) = count * 4     |
+             *   |/        | /       |/                             ^
+             *  (2)-------(6)-------(*) = count * 4 + 2            -| inner
+             */
             for (var i = 0; i < count; i++) {
 
+                // outer
                 geometry.vertices.push(new THREE.Vector3(points[i].x, points[i].y, 0.0));
                 geometry.vertices.push(new THREE.Vector3(points[i].x, points[i].y, height));
+                // inner
+                geometry.vertices.push(new THREE.Vector3(holePoints[i].x, holePoints[i].y, 0.0));
+                geometry.vertices.push(new THREE.Vector3(holePoints[i].x, holePoints[i].y, height));
 
                 // if the rect with prev.vertices already exists
                 if (i > 0) {
+
+                    // outer
                     this.drawFace4(geometry.faces, [
-                        i * 2 - 2,
-                        i * 2 - 1,
-                        i * 2 + 1,
-                        i * 2
+                        i * 4 - 4,
+                        i * 4 - 3,
+                        i * 4 + 1,
+                        i * 4
                     ]);
                     geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(1, 1)]);
                     geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 1), new THREE.Vector2(1, 0)]);
+
+                    // inner
+                    this.drawFace4(geometry.faces, [
+                        i * 4 + 2 - 4,
+                        i * 4 + 2,
+                        i * 4 + 3,
+                        i * 4 + 3 - 4
+                    ]);
+                    geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 0), new THREE.Vector2(1, 1)]);
+                    geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 1), new THREE.Vector2(0, 1)]);
                 }
             }
+
+            // outer finish
             this.drawFace4(geometry.faces, [
-                (count - 1) * 2,
-                (count - 1) * 2 + 1,
+                (count - 1) * 4,
+                (count - 1) * 4 + 1,
                 1,
                 0
             ]);
             geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(1, 1)]);
             geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 1), new THREE.Vector2(1, 0)]);
+
+            // inner finish
+            this.drawFace4(geometry.faces, [
+                (count - 1) * 4 + 2,
+                2,
+                3,
+                (count - 1) * 4 + 3
+            ]);
+            geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 0), new THREE.Vector2(1, 1)]);
+            geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 1), new THREE.Vector2(0, 1)]);
 
             this.addTriangulatedOutlinedManhattanShape(geometry, points, holePoints, 0, 1);
             this.addTriangulatedOutlinedManhattanShape(geometry, points, holePoints, height, -1);
