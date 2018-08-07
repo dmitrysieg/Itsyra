@@ -180,74 +180,87 @@ define([
 
             new BFS(this).withAction(this.createElement).run();
         },
+
+        operations: {
+            shape: {
+                "new": function(el, parentEl) {
+                    if (el.shape.type === "rect") {
+
+                        var shape = new THREE.Shape();
+
+                        var lengthX = Number.parseFloat(el.shape["length-x"]);
+                        var lengthZ = Number.parseFloat(el.shape["length-z"]);
+
+                        shape.moveTo(0, 0);
+                        shape.lineTo(0, lengthZ);
+                        shape.lineTo(lengthX, lengthZ);
+                        shape.lineTo(lengthX, 0);
+                        shape.lineTo(0, 0);
+
+                        return shape;
+
+                    } else {
+                        throw "Unsupported shape: " + el.shape.shape;
+                    }
+                },
+                "outline": function(el, parentEl) {
+                    var outlineWidth = Number.parseFloat(el.shape["outline-width"]);
+                    // todo switch from inner/outer to initial/resulted
+                    el.shape.outerOutline = parentEl.shape.shape;
+
+                    el.shape.innerOutline = shapeHelper.createOutline(parentEl.shape.shape, outlineWidth);
+
+                    var shape = parentEl.shape.shape.clone();
+                    shape.holes = [el.shape.innerOutline];
+                    return shape;
+                },
+                "inner-outline-shape": function(el, parentEl) {
+                    return parentEl.shape.innerOutline;
+                },
+                "outer-outline-shape": function(el, parentEl) {
+                    return parentEl.shape.outerOutline;
+                }
+            },
+            mesh: {
+                "extrude": function(shape, el, parentEl) {
+
+                    var height = Number.parseFloat(el.mesh.height);
+
+                    var geometry;
+                    if (shape.holes.length === 0) {
+                        geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height, bevelEnabled: false});
+                    } else {
+                        geometry = shapeHelper.extrudeShape(shape, height);
+                    }
+
+                    var material = new THREE.MeshBasicMaterial(this.materials[el.mesh.material]);
+                    return new THREE.Mesh(geometry, material);
+                },
+                "center-prism": function() {
+                    //return new THREE.Mesh(geometry, material);
+                }
+            }
+        },
+
         createElement: function(name) {
 
             var el = this.graph.elements[name];
             var parentEl = this.graph.elements[el.base];
-            var shape = new THREE.Shape();
 
-            if (el.shape.operation == "new") {
-
-                if (el.shape.type == "rect") {
-
-                    var lengthX = Number.parseFloat(el.shape["length-x"]);
-                    var lengthZ = Number.parseFloat(el.shape["length-z"]);
-
-                    shape.moveTo(0, 0);
-                    shape.lineTo(0, lengthZ);
-                    shape.lineTo(lengthX, lengthZ);
-                    shape.lineTo(lengthX, 0);
-                    shape.lineTo(0, 0);
-
-                } else {
-                    throw "Unsupported shape: " + el.shape.shape;
-                }
-
-            } else if (el.shape.operation == "outline") {
-
-                var outlineWidth = Number.parseFloat(el.shape["outline-width"]);
-                // todo switch from inner/outer to initial/resulted
-                el.shape.outerOutline = parentEl.shape.shape;
-
-                el.shape.innerOutline = shapeHelper.createOutline(parentEl.shape.shape, outlineWidth);
-
-                shape = parentEl.shape.shape.clone();
-                shape.holes = [el.shape.innerOutline];
-
-            } else if (el.shape.operation == "inner-outline-shape") {
-
-                shape = parentEl.shape.innerOutline;
-
-            } else if (el.shape.operation == "outer-outline-shape") {
-
-                shape = parentEl.shape.outerOutline;
-
-            } else {
+            var shapeFn = this.operations.shape[el.shape.operation];
+            if (!shapeFn instanceof Function) {
                 throw "Shape operation \"" + el.shape.operation + "\" is unsupported";
             }
+            var shape = shapeFn.call(this, el, parentEl);
             el.shape.shape = shape;
 
             var mesh = null;
 
-            if (el.mesh.operation == "extrude") {
-
-                var height = Number.parseFloat(el.mesh.height);
-
-                var geometry;
-                if (shape.holes.length === 0) {
-                    geometry = new THREE.ExtrudeGeometry(shape, {steps: 2, amount: height, bevelEnabled: false});;
-                } else {
-                    geometry = shapeHelper.extrudeShape(shape, height);
-                }
-
-                var material = new THREE.MeshBasicMaterial(this.materials[el.mesh.material]);
-                mesh = new THREE.Mesh(geometry, material) ;
-
-            } else if (el.mesh.operation == "center-prism") {
-
-            } else {
+            var meshFn = this.operations.mesh[el.mesh.operation];
+            if (!meshFn instanceof Function) {
                 throw "Mesh operation \"" + el.mesh.operation + "\" is unsupported";
             }
+            mesh = meshFn.call(this, shape, el, parentEl);
             el.mesh.mesh = mesh;
 
             // add mesh to the group
@@ -280,12 +293,6 @@ define([
         var wallWidth = 0.5;
 
         var roofHeight = 0.25 * sizeY;
-
-
-
-
-
-
 
         // Mandatory element - floor
         this.floor = {geometry: new THREE.CubeGeometry(sizeX, floorHeight, sizeZ), material: this.wallMaterial};
